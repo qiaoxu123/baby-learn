@@ -1,7 +1,7 @@
 export interface Song {
-  id: string;       // filename without .mp3
-  title: string;    // display name
-  audioSrc: string; // /audio/songs/{id}.mp3
+  id: string;
+  title: string;
+  videoSrc: string; // /video/songs/{id}.mp4
 }
 
 export interface SongCategory {
@@ -13,7 +13,7 @@ export interface SongCategory {
 }
 
 function s(id: string, title?: string): Song {
-  return { id, title: title || id, audioSrc: `/audio/songs/${encodeURIComponent(id)}.mp3` };
+  return { id, title: title || id, videoSrc: `/video/songs/${encodeURIComponent(id)}.mp4` };
 }
 
 export const SONG_CATEGORIES: SongCategory[] = [

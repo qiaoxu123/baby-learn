@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef } from "react";
+import { motion } from "framer-motion";
 import { SONG_CATEGORIES, Song, SongCategory } from "@/content/songs";
 import { playClickSound } from "@/lib/audio";
 import { saveProgress, addStars } from "@/lib/progress";
@@ -14,73 +14,88 @@ export default function SongsPage() {
   const [selectedCategory, setSelectedCategory] = useState<SongCategory | null>(null);
   const [playingSong, setPlayingSong] = useState<Song | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Stop audio when navigating away
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-  }, []);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const handlePlay = (song: Song) => {
-    // Stop current
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-
-    if (playingSong?.id === song.id) {
-      setPlayingSong(null);
-      return;
-    }
-
-    const audio = new Audio(song.audioSrc);
-    audioRef.current = audio;
-    audio.play().catch(() => {});
-    audio.onended = () => setPlayingSong(null);
+    playClickSound();
     setPlayingSong(song);
     addStars(1);
-    saveProgress(`songs.${song.id}`, "listen", 1, true);
+    saveProgress(`songs.${song.id}`, "watch", 1, true);
   };
 
-  const handleStop = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setPlayingSong(null);
-  };
+  // === Video Player View ===
+  if (playingSong) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center p-4 select-none bg-black">
+        {/* Video */}
+        <motion.div
+          className="w-full max-w-2xl z-10 rounded-2xl overflow-hidden shadow-2xl"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        >
+          <video
+            ref={videoRef}
+            src={playingSong.videoSrc}
+            controls
+            autoPlay
+            playsInline
+            className="w-full"
+            onEnded={() => {
+              // Auto-play next song in category
+            }}
+          />
+        </motion.div>
 
-  // Search mode
+        {/* Song title */}
+        <motion.div
+          className="mt-4 text-center z-10"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          <h2 className="text-2xl font-bold text-white">{playingSong.title}</h2>
+        </motion.div>
+
+        {/* Controls */}
+        <div className="flex gap-4 mt-4 z-10">
+          <motion.button
+            className="px-6 py-3 bg-white/90 rounded-full shadow-lg text-lg font-medium text-pink-500 flex items-center gap-2"
+            whileTap={{ scale: 0.9 }}
+            onClick={() => {
+              if (videoRef.current) videoRef.current.pause();
+              setPlayingSong(null);
+            }}
+          >
+            📋 返回列表
+          </motion.button>
+        </div>
+      </main>
+    );
+  }
+
+  // === Search Results ===
   if (searchQuery.length > 0) {
     const allSongs = SONG_CATEGORIES.flatMap((c) => c.songs);
     const results = allSongs.filter((s) =>
       s.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
     return (
-      <main className="min-h-screen flex flex-col items-center p-6 pt-20 select-none pb-24">
+      <main className="min-h-screen flex flex-col items-center p-6 pt-20 select-none pb-10">
         <NatureBackground />
         <BackButton />
         <SearchBar query={searchQuery} onChange={setSearchQuery} />
         <div className="text-sm text-gray-400 mb-3 z-10">
           找到 {results.length} 首
         </div>
-        <SongList
-          songs={results}
-          playingSong={playingSong}
-          onPlay={handlePlay}
-        />
-        {playingSong && <NowPlaying song={playingSong} onStop={handleStop} />}
+        <SongList songs={results} onPlay={handlePlay} />
       </main>
     );
   }
 
-  // Category detail view
+  // === Category Detail ===
   if (selectedCategory) {
     return (
-      <main className="min-h-screen flex flex-col items-center p-6 pt-20 select-none pb-24">
+      <main className="min-h-screen flex flex-col items-center p-6 pt-20 select-none pb-10">
         <NatureBackground />
         <BackButton />
 
@@ -90,7 +105,6 @@ export default function SongsPage() {
           onClick={() => {
             playClickSound();
             setSelectedCategory(null);
-            handleStop();
           }}
         >
           ← 返回分类
@@ -103,19 +117,14 @@ export default function SongsPage() {
           {selectedCategory.songs.length} 首儿歌
         </p>
 
-        <SongList
-          songs={selectedCategory.songs}
-          playingSong={playingSong}
-          onPlay={handlePlay}
-        />
-        {playingSong && <NowPlaying song={playingSong} onStop={handleStop} />}
+        <SongList songs={selectedCategory.songs} onPlay={handlePlay} />
       </main>
     );
   }
 
-  // Category grid (home)
+  // === Home: Category Grid ===
   return (
-    <main className="min-h-screen flex flex-col items-center p-6 pt-20 select-none pb-20">
+    <main className="min-h-screen flex flex-col items-center p-6 pt-20 select-none pb-10">
       <NatureBackground />
       <BackButton />
 
@@ -126,7 +135,7 @@ export default function SongsPage() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
         >
-          选一类儿歌听吧!
+          选一类儿歌看吧!
         </motion.div>
         <DogMascot size={65} expression="excited" />
       </div>
@@ -140,7 +149,6 @@ export default function SongsPage() {
 
       <SearchBar query={searchQuery} onChange={setSearchQuery} />
 
-      {/* Category cards */}
       <div className="grid grid-cols-2 gap-3 max-w-md w-full z-10 mt-2">
         {SONG_CATEGORIES.map((cat, i) => (
           <motion.div
@@ -162,19 +170,11 @@ export default function SongsPage() {
           </motion.div>
         ))}
       </div>
-
-      {playingSong && <NowPlaying song={playingSong} onStop={handleStop} />}
     </main>
   );
 }
 
-function SearchBar({
-  query,
-  onChange,
-}: {
-  query: string;
-  onChange: (v: string) => void;
-}) {
+function SearchBar({ query, onChange }: { query: string; onChange: (v: string) => void }) {
   return (
     <div className="w-full max-w-md z-10 mb-3">
       <input
@@ -188,115 +188,30 @@ function SearchBar({
   );
 }
 
-function SongList({
-  songs,
-  playingSong,
-  onPlay,
-}: {
-  songs: Song[];
-  playingSong: Song | null;
-  onPlay: (s: Song) => void;
-}) {
+function SongList({ songs, onPlay }: { songs: Song[]; onPlay: (s: Song) => void }) {
   return (
     <div className="flex flex-col gap-2 max-w-md w-full z-10">
-      {songs.map((song, i) => {
-        const isPlaying = playingSong?.id === song.id;
-        return (
-          <motion.div
-            key={song.id}
-            className={`bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow cursor-pointer flex items-center gap-3 border-2 transition-all ${
-              isPlaying
-                ? "border-pink-400 bg-pink-50/90"
-                : "border-transparent hover:border-pink-200"
-            }`}
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: Math.min(i * 0.03, 0.5) }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              playClickSound();
-              onPlay(song);
-            }}
-          >
-            <motion.div
-              className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
-                isPlaying ? "bg-pink-400 text-white" : "bg-pink-50"
-              }`}
-              animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 0.8, repeat: isPlaying ? Infinity : 0 }}
-            >
-              {isPlaying ? "⏸" : "▶️"}
-            </motion.div>
-            <div className="flex-1 min-w-0">
-              <div
-                className={`text-base font-medium truncate ${
-                  isPlaying ? "text-pink-600" : "text-gray-700"
-                }`}
-              >
-                {song.title}
-              </div>
+      {songs.map((song, i) => (
+        <motion.div
+          key={song.id}
+          className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow cursor-pointer flex items-center gap-3 border-2 border-transparent hover:border-pink-200 transition-all"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: Math.min(i * 0.03, 0.5) }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => onPlay(song)}
+        >
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-pink-50">
+            ▶️
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-base font-medium text-gray-700 truncate">
+              {song.title}
             </div>
-            {isPlaying && (
-              <motion.div
-                className="flex gap-0.5"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                {[1, 2, 3].map((bar) => (
-                  <motion.div
-                    key={bar}
-                    className="w-1 bg-pink-400 rounded-full"
-                    animate={{ height: [8, 16, 8] }}
-                    transition={{
-                      duration: 0.5,
-                      repeat: Infinity,
-                      delay: bar * 0.15,
-                    }}
-                  />
-                ))}
-              </motion.div>
-            )}
-          </motion.div>
-        );
-      })}
+          </div>
+          <div className="text-xs text-gray-300 flex-shrink-0">🎬</div>
+        </motion.div>
+      ))}
     </div>
-  );
-}
-
-function NowPlaying({
-  song,
-  onStop,
-}: {
-  song: Song;
-  onStop: () => void;
-}) {
-  return (
-    <motion.div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t-2 border-pink-200 shadow-lg px-5 py-3 flex items-center gap-4"
-      initial={{ y: 80 }}
-      animate={{ y: 0 }}
-      exit={{ y: 80 }}
-    >
-      <motion.div
-        className="text-3xl"
-        animate={{ rotate: [0, 360] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-      >
-        🎵
-      </motion.div>
-      <div className="flex-1 min-w-0">
-        <div className="text-base font-bold text-pink-600 truncate">
-          {song.title}
-        </div>
-        <div className="text-xs text-gray-400">正在播放...</div>
-      </div>
-      <motion.button
-        className="w-12 h-12 bg-pink-400 text-white rounded-full flex items-center justify-center text-xl shadow-lg"
-        whileTap={{ scale: 0.85 }}
-        onClick={onStop}
-      >
-        ⏹
-      </motion.button>
-    </motion.div>
   );
 }
