@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { VOCAB_DATA, VocabCategory } from "@/content/vocab";
-import { playTTS, playRewardSound, playClickSound } from "@/lib/audio";
+import { playVocab, playAnimalSound, playRewardSound, playClickSound, playTTS } from "@/lib/audio";
 import { saveProgress, addStars } from "@/lib/progress";
 import BackButton from "@/components/BackButton";
 import StarBurst from "@/components/StarBurst";
@@ -74,11 +74,11 @@ export default function VocabPage() {
 
   const handleTap = () => {
     setTapped(true);
-    playTTS(item.english, "en-US");
+    playVocab(item.id);
     if (item.sound) {
-      setTimeout(() => playTTS(item.sound!, "en-US"), 1000);
+      setTimeout(() => playAnimalSound(item.id), 1200);
     }
-    setTimeout(() => setTapped(false), 1500);
+    setTimeout(() => setTapped(false), 2000);
   };
 
   const handleNext = () => {

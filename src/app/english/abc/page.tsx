@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ABC_DATA, LetterData } from "@/content/abc";
-import { playTTS, playRewardSound, playClickSound } from "@/lib/audio";
+import { playLetter, playLetterWord, playRewardSound, playClickSound } from "@/lib/audio";
 import { saveProgress, addStars } from "@/lib/progress";
 import BackButton from "@/components/BackButton";
 import StarBurst from "@/components/StarBurst";
@@ -19,11 +19,11 @@ export default function ABCPage() {
 
   const handleLetterTap = useCallback(() => {
     setTapped(true);
-    playTTS(`${letter.letter}`, "en-US");
+    playLetter(letter.letter);
     setTimeout(() => {
-      playTTS(`${letter.letter} is for ${letter.word}`, "en-US");
-    }, 800);
-    setTimeout(() => setTapped(false), 1500);
+      playLetterWord(letter.letter);
+    }, 1000);
+    setTimeout(() => setTapped(false), 2500);
   }, [letter]);
 
   const handleNext = useCallback(() => {

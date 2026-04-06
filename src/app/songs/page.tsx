@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SONGS_DATA, Song } from "@/content/songs";
-import { playTTS, playRewardSound, playClickSound } from "@/lib/audio";
+import { playSongTitle, playSongLine, playRewardSound, playClickSound, stopAudio } from "@/lib/audio";
 import { saveProgress, addStars } from "@/lib/progress";
 import BackButton from "@/components/BackButton";
 import StarBurst from "@/components/StarBurst";
@@ -110,7 +110,7 @@ export default function SongsPage() {
     );
   }
 
-  const lang = selectedSong.language === "en" ? "en-US" : "zh-CN";
+  const audioLang = selectedSong.language === "en" ? "en" as const : "zh" as const;
 
   const handlePlayAll = () => {
     if (isPlaying) {
@@ -118,19 +118,20 @@ export default function SongsPage() {
       timeoutRefs.current = [];
       setIsPlaying(false);
       setActiveLine(-1);
+      stopAudio();
       return;
     }
 
     setIsPlaying(true);
     const refs: NodeJS.Timeout[] = [];
 
-    playTTS(selectedSong.title, lang);
+    playSongTitle(selectedSong.id, audioLang);
 
     selectedSong.lyrics.forEach((line, i) => {
       const t = setTimeout(() => {
         setActiveLine(i);
-        playTTS(line, lang);
-      }, 1500 + i * 2500);
+        playSongLine(selectedSong.id, i + 1, audioLang);
+      }, 2000 + i * 2800);
       refs.push(t);
     });
 
@@ -142,7 +143,7 @@ export default function SongsPage() {
       addStars(1);
       saveProgress(`songs.${selectedSong.id}`, "listen", 1, true);
       setTimeout(() => setShowReward(false), 2500);
-    }, 1500 + selectedSong.lyrics.length * 2500);
+    }, 2000 + selectedSong.lyrics.length * 2800);
     refs.push(finishT);
 
     timeoutRefs.current = refs;
@@ -150,7 +151,7 @@ export default function SongsPage() {
 
   const handleLineTap = (index: number) => {
     setActiveLine(index);
-    playTTS(selectedSong.lyrics[index], lang);
+    playSongLine(selectedSong.id, index + 1, audioLang);
     playClickSound();
   };
 

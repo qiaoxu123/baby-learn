@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { initAudio, playClickSound, playTTS } from "@/lib/audio";
+import { initAudio, playClickSound } from "@/lib/audio";
 import { getTotalStars } from "@/lib/progress";
 import CatMascot from "@/components/characters/CatMascot";
 import DogMascot from "@/components/characters/DogMascot";
@@ -137,7 +137,6 @@ export default function HomePage() {
               whileTap={{ scale: 0.93 }}
               onClick={() => {
                 playClickSound();
-                playTTS(mod.title, mod.lang);
               }}
             >
               <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${mod.gradient} rounded-t-3xl`} />

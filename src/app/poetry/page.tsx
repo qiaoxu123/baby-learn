@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { POETRY_DATA, Poem } from "@/content/poetry";
-import { playTTS, playRewardSound, playClickSound } from "@/lib/audio";
+import { playPoemTitle, playPoemLine, playRewardSound, playClickSound, stopAudio } from "@/lib/audio";
 import { saveProgress, addStars } from "@/lib/progress";
 import BackButton from "@/components/BackButton";
 import StarBurst from "@/components/StarBurst";
@@ -94,13 +94,13 @@ export default function PoetryPage() {
     setIsPlaying(true);
     const refs: NodeJS.Timeout[] = [];
 
-    playTTS(selectedPoem.title, "zh-CN");
+    playPoemTitle(selectedPoem.id);
 
     selectedPoem.lines.forEach((line, i) => {
       const t = setTimeout(() => {
         setActiveLine(i);
-        playTTS(line.text, "zh-CN");
-      }, 2000 + i * 3000);
+        playPoemLine(selectedPoem.id, i + 1);
+      }, 2500 + i * 3500);
       refs.push(t);
     });
 
@@ -112,7 +112,7 @@ export default function PoetryPage() {
       addStars(2);
       saveProgress(`poetry.${selectedPoem.id}`, "listen", 2, true);
       setTimeout(() => setShowReward(false), 2500);
-    }, 2000 + selectedPoem.lines.length * 3000);
+    }, 2500 + selectedPoem.lines.length * 3500);
     refs.push(finishT);
 
     timeoutRefs.current = refs;
@@ -120,7 +120,7 @@ export default function PoetryPage() {
 
   const handleLineTap = (index: number) => {
     setActiveLine(index);
-    playTTS(selectedPoem.lines[index].text, "zh-CN");
+    playPoemLine(selectedPoem.id, index + 1);
     playClickSound();
   };
 
