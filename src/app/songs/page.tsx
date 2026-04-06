@@ -1,26 +1,28 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { SONGS_DATA, Song } from "@/content/songs";
-import { playSongTitle, playSongLine, playRewardSound, playClickSound, stopAudio } from "@/lib/audio";
+import { playClickSound } from "@/lib/audio";
 import { saveProgress, addStars } from "@/lib/progress";
 import BackButton from "@/components/BackButton";
-import StarBurst from "@/components/StarBurst";
 import CatMascot from "@/components/characters/CatMascot";
 import DogMascot from "@/components/characters/DogMascot";
 import NatureBackground from "@/components/NatureBackground";
 
+function getEmbedUrl(song: Song): string {
+  if (song.platform === "bilibili") {
+    return `https://player.bilibili.com/player.html?bvid=${song.videoId}&autoplay=0&high_quality=1`;
+  }
+  return `https://www.youtube.com/embed/${song.videoId}?rel=0&modestbranding=1`;
+}
+
 export default function SongsPage() {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-  const [activeLine, setActiveLine] = useState(-1);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showReward, setShowReward] = useState(false);
   const [filter, setFilter] = useState<"all" | "zh" | "en">("all");
-  const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
 
   const filteredSongs = SONGS_DATA.filter(
-    (s) => filter === "all" || s.language === filter || s.language === "both"
+    (s) => filter === "all" || s.language === filter
   );
 
   if (!selectedSong) {
@@ -36,7 +38,7 @@ export default function SongsPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
           >
-            一起唱儿歌吧!
+            一起听儿歌吧!
           </motion.div>
           <DogMascot size={70} expression="excited" />
         </div>
@@ -84,7 +86,8 @@ export default function SongsPage() {
               onClick={() => {
                 playClickSound();
                 setSelectedSong(song);
-                setActiveLine(-1);
+                addStars(1);
+                saveProgress(`songs.${song.id}`, "watch", 1, true);
               }}
             >
               <div
@@ -102,7 +105,12 @@ export default function SongsPage() {
                 )}
                 <div className="text-xs text-gray-400 mt-0.5">{song.description}</div>
               </div>
-              <div className="text-3xl text-gray-300 flex-shrink-0">▶</div>
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <div className="text-3xl">▶️</div>
+                <div className="text-[10px] text-gray-300">
+                  {song.platform === "bilibili" ? "B站" : "YouTube"}
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -110,152 +118,56 @@ export default function SongsPage() {
     );
   }
 
-  const audioLang = selectedSong.language === "en" ? "en" as const : "zh" as const;
-
-  const handlePlayAll = () => {
-    if (isPlaying) {
-      timeoutRefs.current.forEach(clearTimeout);
-      timeoutRefs.current = [];
-      setIsPlaying(false);
-      setActiveLine(-1);
-      stopAudio();
-      return;
-    }
-
-    setIsPlaying(true);
-    const refs: NodeJS.Timeout[] = [];
-
-    playSongTitle(selectedSong.id, audioLang);
-
-    selectedSong.lyrics.forEach((line, i) => {
-      const t = setTimeout(() => {
-        setActiveLine(i);
-        playSongLine(selectedSong.id, i + 1, audioLang);
-      }, 2000 + i * 2800);
-      refs.push(t);
-    });
-
-    const finishT = setTimeout(() => {
-      setActiveLine(-1);
-      setIsPlaying(false);
-      setShowReward(true);
-      playRewardSound();
-      addStars(1);
-      saveProgress(`songs.${selectedSong.id}`, "listen", 1, true);
-      setTimeout(() => setShowReward(false), 2500);
-    }, 2000 + selectedSong.lyrics.length * 2800);
-    refs.push(finishT);
-
-    timeoutRefs.current = refs;
-  };
-
-  const handleLineTap = (index: number) => {
-    setActiveLine(index);
-    playSongLine(selectedSong.id, index + 1, audioLang);
-    playClickSound();
-  };
-
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 select-none">
       <NatureBackground />
       <BackButton />
-      <StarBurst show={showReward} count={1} />
 
-      {/* Song emoji */}
+      {/* Song title */}
       <motion.div
-        className="text-8xl mb-3 z-10"
-        animate={{
-          scale: [1, 1.1, 1],
-          rotate: isPlaying ? [0, 8, -8, 0] : 0,
-        }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        {selectedSong.emoji}
-      </motion.div>
-
-      {/* Title */}
-      <motion.h1
-        className="text-3xl font-extrabold text-gray-800 mb-1 z-10 text-center"
+        className="text-center mb-4 z-10 mt-16"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
-        {selectedSong.title}
-      </motion.h1>
-      {selectedSong.titleEn && (
-        <p className="text-base text-gray-400 mb-4 z-10">{selectedSong.titleEn}</p>
-      )}
+        <div className="text-5xl mb-2">{selectedSong.emoji}</div>
+        <h1 className="text-3xl font-extrabold text-gray-800">
+          {selectedSong.title}
+        </h1>
+        {selectedSong.titleEn && (
+          <p className="text-base text-gray-400">{selectedSong.titleEn}</p>
+        )}
+      </motion.div>
 
-      {/* Lyrics card */}
-      <div
-        className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 w-96 max-w-full shadow-xl mb-5 border-2 border-pink-100 z-10 max-h-[50vh] overflow-y-auto"
-        style={{ scrollbarWidth: "none" }}
+      {/* Video player */}
+      <motion.div
+        className="w-full max-w-lg z-10 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/80"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
       >
-        {selectedSong.lyrics.map((line, i) => (
-          <motion.div
-            key={i}
-            className={`py-3 px-4 rounded-xl mb-1.5 cursor-pointer transition-all ${
-              activeLine === i
-                ? "bg-gradient-to-r from-pink-50 to-orange-50 shadow-md border border-pink-200"
-                : "hover:bg-pink-50/50"
-            }`}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => handleLineTap(i)}
-          >
-            <div
-              className={`text-xl font-medium ${
-                activeLine === i ? "text-pink-600" : "text-gray-700"
-              }`}
-            >
-              {activeLine === i
-                ? line.split("").map((char, ci) => (
-                    <motion.span
-                      key={ci}
-                      initial={{ opacity: 0.3 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: ci * 0.08 }}
-                    >
-                      {char}
-                    </motion.span>
-                  ))
-                : line}
-            </div>
-          </motion.div>
-        ))}
-      </div>
+        <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+          <iframe
+            className="absolute inset-0 w-full h-full"
+            src={getEmbedUrl(selectedSong)}
+            title={selectedSong.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+          />
+        </div>
+      </motion.div>
 
-      {/* Controls */}
-      <div className="flex gap-4 z-10">
-        <motion.button
-          className="w-16 h-16 bg-white/90 backdrop-blur rounded-full shadow-lg text-3xl flex items-center justify-center border-2 border-pink-200"
-          whileTap={{ scale: 0.85 }}
-          onClick={() => {
-            playClickSound();
-            setSelectedSong(null);
-            timeoutRefs.current.forEach(clearTimeout);
-            setIsPlaying(false);
-          }}
-        >
-          📋
-        </motion.button>
-
-        <motion.button
-          className={`w-20 h-20 rounded-full shadow-lg text-4xl flex items-center justify-center border-2 ${
-            isPlaying
-              ? "bg-red-50 text-red-500 border-red-200"
-              : "bg-gradient-to-r from-pink-400 to-orange-400 text-white border-pink-300"
-          }`}
-          whileTap={{ scale: 0.85 }}
-          animate={isPlaying ? { scale: [1, 1.05, 1] } : {}}
-          transition={{ duration: 1, repeat: isPlaying ? Infinity : 0 }}
-          onClick={handlePlayAll}
-        >
-          {isPlaying ? "⏹" : "▶️"}
-        </motion.button>
-      </div>
-
-      <p className="mt-3 text-gray-400 text-sm z-10">
-        {isPlaying ? "正在播放..." : "点击歌词或按播放键"}
-      </p>
+      {/* Back to list button */}
+      <motion.button
+        className="mt-6 z-10 px-8 py-4 bg-white/90 backdrop-blur rounded-full shadow-lg text-xl font-medium text-pink-500 border-2 border-pink-200 flex items-center gap-2"
+        whileTap={{ scale: 0.9 }}
+        onClick={() => {
+          playClickSound();
+          setSelectedSong(null);
+        }}
+      >
+        📋 返回歌单
+      </motion.button>
     </main>
   );
 }
