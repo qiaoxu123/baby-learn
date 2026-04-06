@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Family {
+  id        String     @id @default(cuid())
+  name      String     @default("My Family")
+  pin       String     // 4-digit PIN for parent access
+  createdAt DateTime   @default(now())
+  progress  Progress[]
+}
+
+model Progress {
+  id        String   @id @default(cuid())
+  familyId  String
+  family    Family   @relation(fields: [familyId], references: [id])
+  module    String   // "abc", "vocab.animals", "poetry.yong-e"
+  lessonId  String   // "letter-A", "cat", "verse-1"
+  stars     Int      @default(0)
+  completed Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@unique([familyId, module, lessonId])
+}

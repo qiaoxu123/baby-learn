@@ -1,0 +1,9 @@
+# Replace with your actual domain
+# yourdomain.com {
+#     reverse_proxy app:3000
+# }
+
+# For testing without a domain (HTTP only)
+:80 {
+    reverse_proxy app:3000
+}
