@@ -146,7 +146,7 @@ export default function VocabPage() {
           animate={{ rotateY: 0, opacity: 1 }}
           exit={{ rotateY: -90, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-72 max-w-full z-10"
+          className="w-96 max-w-full z-10"
         >
           <motion.div
             className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 text-center shadow-xl cursor-pointer border-2 border-green-100 relative overflow-hidden"
@@ -156,15 +156,15 @@ export default function VocabPage() {
             <div className="absolute top-0 left-0 right-0 h-2 rounded-t-3xl" style={{ backgroundColor: selectedCategory.color }} />
 
             <motion.div
-              className="text-7xl mb-4 mt-2"
+              className="text-8xl mb-4 mt-2"
               animate={tapped ? { scale: [1, 1.4, 1], rotate: [0, 15, -15, 0] } : { scale: 1 }}
               transition={{ duration: 0.6 }}
             >
               {item.emoji}
             </motion.div>
 
-            <div className="text-3xl font-bold text-gray-800 mb-1">{item.english}</div>
-            <div className="text-lg text-gray-400 mb-2">{item.chinese}</div>
+            <div className="text-4xl font-bold text-gray-800 mb-1">{item.english}</div>
+            <div className="text-2xl text-gray-400 mb-2">{item.chinese}</div>
 
             {item.sound && (
               <motion.div

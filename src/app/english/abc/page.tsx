@@ -98,16 +98,16 @@ export default function ABCPage() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="w-80 max-w-full z-10"
+          className="w-96 max-w-full z-10"
         >
           <LetterCard letter={letter} tapped={tapped} onTap={handleLetterTap} />
         </motion.div>
       </AnimatePresence>
 
       {/* Navigation */}
-      <div className="flex gap-6 mt-5 z-10">
+      <div className="flex gap-8 mt-6 z-10">
         <motion.button
-          className="w-16 h-16 bg-white/90 backdrop-blur rounded-full shadow-lg text-3xl flex items-center justify-center border-2 border-orange-200 disabled:opacity-30"
+          className="w-20 h-20 bg-white/90 backdrop-blur rounded-full shadow-lg text-4xl flex items-center justify-center border-2 border-orange-200 disabled:opacity-30"
           whileTap={{ scale: 0.85 }}
           onClick={handlePrev}
           disabled={currentIndex === 0}
@@ -115,7 +115,7 @@ export default function ABCPage() {
           ⬅️
         </motion.button>
         <motion.button
-          className="w-16 h-16 bg-white/90 backdrop-blur rounded-full shadow-lg text-3xl flex items-center justify-center border-2 border-orange-200"
+          className="w-20 h-20 bg-white/90 backdrop-blur rounded-full shadow-lg text-4xl flex items-center justify-center border-2 border-orange-200"
           whileTap={{ scale: 0.85 }}
           onClick={handleNext}
         >
@@ -149,7 +149,7 @@ function LetterCard({
 
       {/* Big letter */}
       <motion.div
-        className="text-8xl font-extrabold mb-3"
+        className="text-9xl font-extrabold mb-3"
         style={{ color: letter.color }}
         animate={
           tapped
@@ -170,8 +170,8 @@ function LetterCard({
         {letter.emoji}
       </motion.div>
 
-      <div className="text-2xl font-bold text-gray-700">{letter.word}</div>
-      <div className="text-base text-gray-400">{letter.wordZh}</div>
+      <div className="text-3xl font-bold text-gray-700">{letter.word}</div>
+      <div className="text-lg text-gray-400">{letter.wordZh}</div>
 
       {/* Phonics badge */}
       <motion.div

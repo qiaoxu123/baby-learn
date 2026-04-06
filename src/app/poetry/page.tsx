@@ -169,7 +169,7 @@ export default function PoetryPage() {
       </p>
 
       {/* Poem card */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 w-80 max-w-full shadow-xl mb-5 border-2 border-purple-100 z-10">
+      <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 w-96 max-w-full shadow-xl mb-5 border-2 border-purple-100 z-10">
         {selectedPoem.lines.map((line, i) => (
           <motion.div
             key={i}
@@ -182,9 +182,9 @@ export default function PoetryPage() {
             onClick={() => handleLineTap(i)}
             animate={activeLine === i ? { scale: [1, 1.01, 1] } : { scale: 1 }}
           >
-            <div className="text-[10px] text-gray-400 mb-0.5 tracking-wider">{line.pinyin}</div>
+            <div className="text-xs text-gray-400 mb-0.5 tracking-wider">{line.pinyin}</div>
             <div
-              className={`text-xl font-medium tracking-[0.2em] ${
+              className={`text-2xl font-medium tracking-[0.2em] ${
                 activeLine === i ? "text-purple-700" : "text-gray-700"
               }`}
             >
